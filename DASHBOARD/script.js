@@ -126,3 +126,100 @@ document.getElementById('dadosForm').addEventListener('submit', function(event) 
         alert('Erro ao adicionar produto.');
     });
 });
+
+// Função para abrir o formulário de edição - by MK
+function editarProduto(id, nome, preco, quantidade, precoVenda) {
+    produtoEditandoId = id;
+    document.getElementById('editForm').style.display = 'block';
+    document.getElementById('editNome').value = nome;
+    document.getElementById('editPreco').value = preco;
+    document.getElementById('editQuantidade').value = quantidade;
+    document.getElementById('editPrecoVenda').value = precoVenda;
+}
+
+// Função para salvar a edição
+document.getElementById('salvarEdicao').addEventListener('click', function() {
+    const novoNome = document.getElementById('editNome').value;
+    const novoPreco = Number(document.getElementById('editPreco').value);
+    const novaQuantidade = Number(document.getElementById('editQuantidade').value);
+    const novoPrecoVenda = Number(document.getElementById('editPrecoVenda').value);
+console.log(novoPrecoVenda)
+    fetch(`https://parseapi.back4app.com/parse/classes/Produto/${produtoEditandoId}`, {
+        method: 'PUT',
+        headers: {
+            'X-Parse-Application-Id': 'IlO78lK8DrU6wOjy5KTVz3giRDowJ0aO64LZzq9F',
+            'X-Parse-REST-API-Key': 'SGZSkF26vT0scc5ciiklDYOrR9ZVUkcAKzBpbiUF',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ nome: novoNome, preco: novoPreco, quantidade: novaQuantidade, precoVenda: novoPrecoVenda })
+    })
+    .then(() => {
+        alert('Produto atualizado com sucesso!');
+        document.getElementById('editForm').style.display = 'none';
+        listarProdutos();
+    })
+    .catch(error => {
+        console.error('Erro ao atualizar produto:', error);
+        alert('Erro ao atualizar produto.');
+    });
+});
+
+
+// Função para excluir produtos
+function excluirProduto(id) {
+    if (confirm('Tem certeza que deseja excluir este produto?')) {
+        fetch(`https://parseapi.back4app.com/parse/classes/Produto/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'X-Parse-Application-Id': 'IlO78lK8DrU6wOjy5KTVz3giRDowJ0aO64LZzq9F',
+                'X-Parse-REST-API-Key': 'SGZSkF26vT0scc5ciiklDYOrR9ZVUkcAKzBpbiUF',
+            }
+        })
+        .then(() => {
+            alert('Produto excluído com sucesso!');
+            listarProdutos();
+        })
+        .catch(error => {
+            console.error('Erro ao excluir produto:', error);
+            alert('Erro ao excluir produto.');
+        });
+    }
+}
+
+// Carregar os produtos ao inicializar a página
+document.addEventListener('DOMContentLoaded', listarProdutos);
+
+async function converter() {
+    try {
+        // Fetch da API para obter o câmbio BRL-USD
+        let resposta = await fetch('https://economia.awesomeapi.com.br/json/last/BRL-USD', {
+            method: 'GET',
+        });
+        let dados = await resposta.json();
+        let taxaCambio = parseFloat(dados.BRLUSD.high); // Pega o valor do câmbio atual
+
+        // Atualiza os preços na tabela
+        const tableRows = document.querySelectorAll('#produtosTable tbody tr');
+        tableRows.forEach(row => {
+            // Pega o valor em BRL do preço de venda
+            let precoVendaBRL = parseFloat(row.children[3].innerText);
+
+            // Converte corretamente de BRL para USD
+            let precoVendaUSD = (precoVendaBRL * taxaCambio).toFixed(2);
+
+            // Adiciona ou atualiza a célula do preço em USD
+            if (row.children.length === 5) {
+                const precoUSDCell = document.createElement('td');
+                precoUSDCell.innerText = `$ ${precoVendaUSD}`;
+                row.appendChild(precoUSDCell);
+            } else {
+                row.children[4].innerText = `$ ${precoVendaUSD}`;
+            }
+        });
+
+        alert('Conversão concluída com sucesso!');
+    } catch (error) {
+        console.error('Erro ao converter valores:', error);
+        alert('Erro ao realizar a conversão.');
+    }
+}
