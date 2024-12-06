@@ -207,13 +207,14 @@ async function converter() {
             // Converte corretamente de BRL para USD
             let precoVendaUSD = (precoVendaBRL * taxaCambio).toFixed(2);
 
-            // Adiciona ou atualiza a célula do preço em USD
+            // Atualiza a célula do preço em dólar, criando-a apenas uma vez
             if (row.children.length === 5) {
                 const precoUSDCell = document.createElement('td');
                 precoUSDCell.innerText = `$ ${precoVendaUSD}`;
                 row.appendChild(precoUSDCell);
-            } else {
-                row.children[4].innerText = `$ ${precoVendaUSD}`;
+            } else if (row.children.length === 6) {
+                // Atualiza a célula existente de preço em dólar
+                row.children[5].innerText = `$ ${precoVendaUSD}`;
             }
         });
 
@@ -223,3 +224,4 @@ async function converter() {
         alert('Erro ao realizar a conversão.');
     }
 }
+
